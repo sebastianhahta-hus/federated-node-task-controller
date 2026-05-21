@@ -118,6 +118,15 @@ class KubernetesV1(BaseK8s, client.CoreV1Api):
                 driver=os.getenv("AWS_STORAGE_DRIVER"),
                 volume_handle=os.getenv("AWS_FILES_SYSTEM_ID")
             )
+        elif os.getenv("GCP_STORAGE_ENABLED"):
+            pv_spec.csi = client.V1CSIPersistentVolumeSource(
+                driver="filestore.csi.storage.gke.io",
+                volume_handle=os.getenv("GCP_VOLUME_HANDLE"),
+                volume_attributes={
+                    "ip": os.getenv("GCP_FILESTORE_IP"),
+                    "volume": os.getenv("GCP_SHARE_NAME")
+                }
+            )
         else:
             pv_spec.host_path = client.V1HostPathVolumeSource(
                 path=f"{MOUNT_PATH}/controller/"
@@ -323,7 +332,7 @@ class KubernetesV1Batch(BaseK8s, client.BatchV1Api):
                 client.V1VolumeMount(
                     mount_path="/mnt/results/",
                     name="results",
-                    sub_path="controller" if os.getenv("AWS_STORAGE_ENABLED") else None
+                    sub_path="controller"
                 )
             )
             vol_mounts.append(
